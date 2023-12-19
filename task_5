@@ -636,3 +636,20 @@ robyn_response(
   metric_name = "newsletter",
   metric_value = 50000
 )
+
+#overview of the data:
+# Exclude the "X" column from the data frame
+df_filtered <- df[, !colnames(df) %in% c("X")]
+
+# Create a long-format data frame for ggplot2
+df_long <- reshape2::melt(df_filtered, id.vars = "date", variable.name = "Channel", value.name = "Spend")
+
+# Convert date to Date type
+df_long$date <- as.Date(df_long$date)
+
+# Create a ggplot with facets and remove the legend
+ggplot(df_long, aes(x = date, y = Spend, col = Channel, group = Channel)) +
+  geom_line() +
+  facet_wrap(~Channel, scales = "free_y", ncol = 1) +
+  labs(x = "Date", y = "Spend", title = "Marketing Channel Spends Over Time") +
+  theme(legend.position = "none")
