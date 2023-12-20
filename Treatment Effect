@@ -1,3 +1,4 @@
+### set working environment
 # add packages to the list as needed
 pkgs <- list("glmnet", "reticulate", "stringr", "rstudioapi", "data.table", "parallel", "minpack.lm", "doParallel",
              "foreach", "pROC", "gplots", "pwr", "dplyr", "caret", "sm", "ggplot2", "scales", "reshape2", "Hmisc", "Rmisc",
@@ -11,10 +12,11 @@ pkgs <- list("glmnet", "reticulate", "stringr", "rstudioapi", "data.table", "par
 lapply(pkgs, require, character.only = T)
 
 # set wd
-setwd("/Users/jr/Dropbox/Talks:teaching/Mannheim Business School/Data")
+setwd(/Users/kaimeissner)
 
 # load cleaned and prepared datasets
 data <- day2.data.2
+
 data$X <- NULL
 data$unique_id <- as.factor(data$unique_id)
 
@@ -75,8 +77,47 @@ summarySE(data, "d30_rounds_played", groupvars = c("test_bucket"), na.rm = FALSE
 summarySE(data, "d30_retention", groupvars = c("test_bucket"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
 summarySE(data, "d30_ad_views", groupvars = c("test_bucket"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
 
-lm_country <- lm(formula= d30_rev_denoised ~country_tier, data= data)
-summary(lm_country)
+summarySE(data, "d60_revenue", groupvars = c("test_bucket"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
 
-lm_RAM <- lm(formula= d30_rev_denoised ~device_ram_gb, data= data)
-summary(lm_RAM)
+data$d60_rev_denoised <- data$d60_revenue
+data$d60_rev_denoised[data$d60_revenue > quantile(filter(data,d60_revenue > 0)$d60_revenue, c(d))] <- quantile(filter(data,d60_revenue > 0)$d60_revenue, c(d))
+summarySE(data, "d60_rev_denoised", groupvars = c("test_bucket"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+
+
+### country and device tier
+summarySE(data, "d30_offer_conversion", groupvars = c("country_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_offer_revenue", groupvars = c("country_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_conversion", groupvars = c("country_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_revenue", groupvars = c("country_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_rev_denoised", groupvars = c("country_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+
+summarySE(data, "d30_offer_conversion", groupvars = c("device_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_offer_revenue", groupvars = c("device_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_conversion", groupvars = c("device_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_revenue", groupvars = c("device_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+summarySE(data, "d30_rev_denoised", groupvars = c("device_tier"), na.rm = FALSE, conf.interval = 0.95, .drop = TRUE)
+
+
+# estimate linear regression and show results
+lm_treat = lm(d30_rev_denoised ~ action2, data = data)
+
+summary(lm_treat) 
+
+lm_treat2 = lm(d30_conversion ~ action2, data = data)
+
+summary(lm_treat2) 
+
+# look at associations between device memory and user spending
+lm_ram = lm(d30_rev_denoised ~ device_ram, data = data)
+
+summary(lm_ram)
+
+data$device_ram_gb <- data$device_ram/1000
+lm_ram_gb = lm(d30_rev_denoised ~ device_ram_gb, data = data)
+
+summary(lm_ram_gb)
+
+# look at associations between country tier and user spending
+lm_country <- lm(formula= d30_rev_denoised ~country_tier, data= data)
+
+summary(lm_country)
